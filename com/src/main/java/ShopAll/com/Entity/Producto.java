@@ -2,6 +2,8 @@ package ShopAll.com.Entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -22,11 +24,13 @@ public class Producto {
     private long id;
 
     @Column
+    @NotBlank
     private String nombre;
 
     @Column
     private String descripcion;
 
     @Column
+    @Min(value = 100,message = "El ´precio minimo es de $100")
     private Double costo;
 }
