@@ -2,6 +2,7 @@ package ShopAll.com.Controller;
 
 import ShopAll.com.Entity.Persona;
 import ShopAll.com.Entity.Producto;
+import ShopAll.com.Exception.UserNotFoundException;
 import ShopAll.com.Service.PersonaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,6 +15,7 @@ import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,7 +24,12 @@ import java.util.List;
 @RequestMapping("/personas") // Define la raíz de URL para todas las rutas manejadas por este controlador
 @Tag(name = "Usuarios") // Etiqueta para documentación Swagger
 @CrossOrigin(origins="*") //Permite que una API REST sea accesible desde cualquier origen
+@Validated// Valida las restricciones
 public class PersonaController {
+    @GetMapping("/")
+    public String welcome() {
+        return "index"; // Devuelve el nombre de la plantilla sin la extensión (Thymeleaf asume ".html" por defecto)
+    }
     @Autowired // Realiza la inyección automática de la dependencia UserService
     private PersonaService personaService;
 
@@ -37,7 +44,11 @@ public class PersonaController {
     @Operation(summary = "Obtener persona con su ID")
     @GetMapping("/{id}") // Mapeo para manejar solicitudes GET en la ruta /users/{id}
     public Persona obtenerPersona(@PathVariable Long id){
-        return personaService.obtenerPersona(id);
+        if (id >= 0){
+            return personaService.obtenerPersona(id);
+        } else {
+            throw new UserNotFoundException("El usuario no se encontró con el ID: " + id);
+        }
     }
 
     // Buscar persona por email
@@ -66,6 +77,34 @@ public class PersonaController {
             return ResponseEntity.ok(productos);
         } else{
             return  ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+    }
+
+    @Operation(summary = "Agregar producto a la lista de compra del usuario")
+    @PatchMapping("/{id}/agregarProducto")
+    public ResponseEntity<?> agregarProductos(@PathVariable Long id, @RequestBody Producto nuevoProducto) {
+        try {
+            Persona usuario = personaService.getUser(id);
+
+            if (usuario != null) {
+                List<Producto> listaCompra = usuario.getListaCompra();
+
+                if(nuevoProducto.getCosto() >= 100){
+                    // Agregar el nuevo producto a la lista de compra
+                    listaCompra.add(nuevoProducto);
+
+                    // Actualizar la lista de compra en la base de datos
+                    personaService.actualizarListaCompra(id,listaCompra);
+
+                    return ResponseEntity.ok("Producto agregado a la lista de compra exitosamente.");
+                } else {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("El precio minimo debe ser de 100");
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado.");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al agregar el producto a la lista de compra.");
         }
     }
 }

@@ -37,6 +37,22 @@ public class PersonaService {
         // Devuelve null si no se encuentra el usuario con el ID proporcionado
         return null;
     }
+    public Persona actualizarListaCompra(Long id, List<Producto> nuevaListaCompra) {
+        // Busca una persona existente por su ID
+        Persona personaExistente = personaRepository.findById(id).orElse(null);
+
+        if (personaExistente != null) {
+            // Actualiza solo la lista de compra con los valores de la nueva lista
+            personaExistente.setListaCompra(nuevaListaCompra);
+
+            // Guarda y devuelve la persona actualizada
+            return personaRepository.save(personaExistente);
+        }
+
+        // Devuelve null si no se encuentra la persona con el ID proporcionado
+        return null;
+    }
+
 
     public Persona getUser(Long id) {
         return personaRepository.findById(id).orElse(null);

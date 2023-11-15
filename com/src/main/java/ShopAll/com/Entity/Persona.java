@@ -2,6 +2,7 @@ package ShopAll.com.Entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,15 +25,18 @@ public class Persona {
     private long id;
 
     @Column
+    @NotBlank
     private String nombre;
 
     @Column
     private int edad;
 
     @Column
+    @NotBlank
     private String email;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "idUsuario")
+    @JsonIgnore
     private List<Producto> listaCompra;
 }
