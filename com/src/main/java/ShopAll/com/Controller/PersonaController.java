@@ -2,6 +2,7 @@ package ShopAll.com.Controller;
 
 import ShopAll.com.Entity.Persona;
 import ShopAll.com.Entity.Producto;
+import ShopAll.com.Exception.ProductErrorRegister;
 import ShopAll.com.Exception.UserNotFoundException;
 import ShopAll.com.Service.PersonaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,7 +25,7 @@ import java.util.List;
 @RequestMapping("/personas") // Define la raíz de URL para todas las rutas manejadas por este controlador
 @Tag(name = "Usuarios") // Etiqueta para documentación Swagger
 @CrossOrigin(origins="*") //Permite que una API REST sea accesible desde cualquier origen
-@Validated// Valida las restricciones
+//@Validated// Valida las restricciones
 public class PersonaController {
     @GetMapping("/")
     public String welcome() {
@@ -80,29 +81,14 @@ public class PersonaController {
         }
     }
 
-    @Operation(summary = "Agregar producto a la lista de compra del usuario")
-    @PatchMapping("/{id}/agregarProducto")
-    public ResponseEntity<?> agregarProductos(@PathVariable Long id, @RequestBody Producto nuevoProducto) {
+    @Operation(summary = "Agregar producto a la lista de compra del usuario por ID")
+    @PostMapping("/{id}/agregarProducto")
+    public ResponseEntity<?> agregarProductoAListaCompra(@PathVariable Long id, @RequestBody Producto nuevoProducto) {
         try {
-            Persona usuario = personaService.getUser(id);
-
-            if (usuario != null) {
-                List<Producto> listaCompra = usuario.getListaCompra();
-
-                if(nuevoProducto.getCosto() >= 100){
-                    // Agregar el nuevo producto a la lista de compra
-                    listaCompra.add(nuevoProducto);
-
-                    // Actualizar la lista de compra en la base de datos
-                    personaService.actualizarListaCompra(id,listaCompra);
-
-                    return ResponseEntity.ok("Producto agregado a la lista de compra exitosamente.");
-                } else {
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("El precio minimo debe ser de 100");
-                }
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado.");
-            }
+            personaService.agregarProductoAListaCompra(id, nuevoProducto);
+            return ResponseEntity.ok("Producto agregado a la lista de compra exitosamente.");
+        } catch (UserNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al agregar el producto a la lista de compra.");
         }

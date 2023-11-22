@@ -2,6 +2,7 @@ package ShopAll.com.Service;
 
 import ShopAll.com.Entity.Persona;
 import ShopAll.com.Entity.Producto;
+import ShopAll.com.Exception.UserNotFoundException;
 import ShopAll.com.Repository.PersonaRepository;
 import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,5 +57,22 @@ public class PersonaService {
 
     public Persona getUser(Long id) {
         return personaRepository.findById(id).orElse(null);
+    }
+
+    public void agregarProductoAListaCompra(Long personaId, Producto nuevoProducto) {
+        Persona persona = personaRepository.findById(personaId).orElse(null);
+
+        if (persona != null) {
+            List<Producto> listaCompra = persona.getListaCompra();
+            listaCompra.add(nuevoProducto);
+
+            // Puedes realizar validaciones adicionales antes de agregar el producto a la lista
+            // ...
+
+            personaRepository.save(persona);
+        } else {
+            // Manejar el caso cuando la persona no se encuentra
+            throw new UserNotFoundException("Persona no encontrada con ID: " + personaId);
+        }
     }
 }
